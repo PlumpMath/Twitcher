@@ -15,7 +15,7 @@
         <StackPanel Name="MenuStackPanel" Grid.Row="0" HorizontalAlignment="Left" Orientation="Horizontal">
             <Label Content="Felhasználónév: " Width="95" Height="{Binding ElementName=MenuStackPanel, Path=ActualHeight}"/>
             <TextBox Width="95" Height="{Binding ElementName=MenuStackPanel, Path=ActualHeight}" Text="{Binding UserName}"/>
-            <Button Content="Betöltés" Width="95" Height="{Binding ElementName=MenuStackPanel, Path=ActualHeight}"  Command="{Binding LoadChannelsCommand}"/>
+            <Button Content="Betöltés" Width="95" Height="{Binding ElementName=MenuStackPanel, Path=ActualHeight}"  Command="{Binding LoadChannelsCommand}" IsEnabled="{Binding LoadButtonIsEnabled}"/>
             <Button Content="Kilépés" Width="95" Height="{Binding ElementName=MenuStackPanel, Path=ActualHeight}" Command="{Binding ExitCommand}" />
         </StackPanel>
         <DataGrid AutoGenerateColumns="False"  Grid.Row="1"   ItemsSource="{Binding StreamingList}" SelectedItem="{Binding SelectedChannel}" CanUserAddRows="False">

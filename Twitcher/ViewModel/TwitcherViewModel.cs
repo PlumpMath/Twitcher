@@ -13,6 +13,25 @@ namespace Twitcher.ViewModel
         private ObservableCollection<TwitchChannel> _streamingList;
         private TwitchChannel _selectedChannel;
         private string _userName;
+        private bool _loadButtonIsEnabled;
+
+
+        public bool LoadButtonIsEnabled
+        {
+            get
+            {
+                return _loadButtonIsEnabled;
+            }
+
+            set
+            {
+                if(value != _loadButtonIsEnabled)
+                {
+                    _loadButtonIsEnabled = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
 
         
@@ -69,9 +88,11 @@ namespace Twitcher.ViewModel
         {
             _model = model;
             _streamingList = new ObservableCollection<TwitchChannel>();
+            _loadButtonIsEnabled = true;
 
             LoadChannelsCommand = new DelegateCommand(async (param) =>
             {
+                OnLoadStarted();   
                 try
                 {
                     await _model.LoadFollowingListForUsername(_userName);
@@ -81,6 +102,7 @@ namespace Twitcher.ViewModel
                 {
 
                 }
+                OnLoadFinished();
             });
 
             RunLivestreamerCommand = new DelegateCommand(param =>
@@ -101,6 +123,16 @@ namespace Twitcher.ViewModel
             });
         }
 
+        private void OnLoadStarted()
+        {
+            LoadButtonIsEnabled = false;
+        }
+
+        private void OnLoadFinished()
+        {
+            LoadButtonIsEnabled = true;
+        }
+
         private void OnExitCommand()
         {
             if (ExitApplication != null)
@@ -108,6 +140,7 @@ namespace Twitcher.ViewModel
         }
 
         public EventHandler ExitApplication;
+        
 
 
         public DelegateCommand LoadChannelsCommand { get; private set; }
