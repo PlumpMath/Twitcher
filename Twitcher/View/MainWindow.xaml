@@ -5,23 +5,23 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Twitcher"
         mc:Ignorable="d"
-        Title="Twitcher" Height="350" Width="525">
+        Title="Twitcher" Height="360" Width="400" ResizeMode="NoResize">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="25" />
+            <RowDefinition Height="25"/>
             <RowDefinition Height="*" />
             <RowDefinition Height="25" />
         </Grid.RowDefinitions>
-        
-        <StackPanel Grid.Row="0" HorizontalAlignment="Left" Orientation="Horizontal">
-            <TextBox Width="125" Text="{Binding UserName}"/>
-            <Button Content="Betöltés" Width="125"  Command="{Binding LoadChannelsCommand}"/>
-            <Button Content="Kilépés" Width="125"  Command="{Binding ExitCommand}"/>
+        <StackPanel Name="MenuStackPanel" Grid.Row="0" HorizontalAlignment="Left" Orientation="Horizontal">
+            <Label Content="Felhasználónév: " Width="95" Height="{Binding ElementName=MenuStackPanel, Path=ActualHeight}"/>
+            <TextBox Width="95" Height="{Binding ElementName=MenuStackPanel, Path=ActualHeight}" Text="{Binding UserName}"/>
+            <Button Content="Betöltés" Width="95" Height="{Binding ElementName=MenuStackPanel, Path=ActualHeight}"  Command="{Binding LoadChannelsCommand}"/>
+            <Button Content="Kilépés" Width="95" Height="{Binding ElementName=MenuStackPanel, Path=ActualHeight}" Command="{Binding ExitCommand}" />
         </StackPanel>
-        <DataGrid Grid.Row="1" AutoGenerateColumns="False" ItemsSource="{Binding StreamingList}" SelectedItem="{Binding SelectedChannel}">
+        <DataGrid AutoGenerateColumns="False"  Grid.Row="1"   ItemsSource="{Binding StreamingList}" SelectedItem="{Binding SelectedChannel}" CanUserAddRows="False">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Streamer" Binding="{Binding DisplayName}" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Játék" Binding="{Binding Game}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Streamer" Binding="{Binding DisplayName}" IsReadOnly="True" Width="*"/>
+                <DataGridTextColumn Header="Játék" Binding="{Binding Game}" IsReadOnly="True" Width="*"/>
             </DataGrid.Columns>
         </DataGrid>
         <StackPanel Grid.Row="2" Orientation="Horizontal">

@@ -7,12 +7,15 @@ namespace Twitcher.ViewModel
 {
     public class TwitcherViewModel : ViewModelBase
     {
-        private TwitcherModel _model;
 
+
+        private TwitcherModel _model;
         private ObservableCollection<TwitchChannel> _streamingList;
         private TwitchChannel _selectedChannel;
         private string _userName;
-        //private const string _playerArgument = "--player d:\\programok\\videolan\\vlc\\vlc.exe";
+
+
+        
 
 
         public TwitchChannel SelectedChannel

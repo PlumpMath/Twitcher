@@ -24,5 +24,10 @@ namespace Twitcher.View
         {
             InitializeComponent();
         }
+
+        private void DataGrid_Selected(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }
