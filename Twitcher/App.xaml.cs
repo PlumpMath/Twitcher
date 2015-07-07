@@ -25,11 +25,19 @@ namespace Twitcher
             _model = new TwitcherModel();
             _viewModel = new TwitcherViewModel(_model);
 
+            _viewModel.ExitApplication += new EventHandler(ViewModel_ExitApplication);
+
+
             _view = new MainWindow();
             _view.DataContext = _viewModel;
 
             _view.Show();
 
+        }
+
+        private void ViewModel_ExitApplication(object sender, EventArgs e)
+        {
+            Shutdown();
         }
     }
 }

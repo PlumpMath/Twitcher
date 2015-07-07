@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using Twitcher.Model;
 
@@ -93,9 +94,18 @@ namespace Twitcher.ViewModel
 
             ExitCommand = new DelegateCommand(param => 
             {
-
+                OnExitCommand();
             });
         }
+
+        private void OnExitCommand()
+        {
+            if (ExitApplication != null)
+                ExitApplication(this, EventArgs.Empty);
+        }
+
+        public EventHandler ExitApplication;
+
 
         public DelegateCommand LoadChannelsCommand { get; private set; }
         public DelegateCommand RunLivestreamerCommand { get; private set; }
