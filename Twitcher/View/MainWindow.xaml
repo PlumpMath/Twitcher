@@ -1,0 +1,31 @@
+﻿<Window x:Class="Twitcher.View.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Twitcher"
+        mc:Ignorable="d"
+        Title="Twitcher" Height="350" Width="525">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="25" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="25" />
+        </Grid.RowDefinitions>
+        
+        <StackPanel Grid.Row="0" HorizontalAlignment="Left" Orientation="Horizontal">
+            <TextBox Width="125" Text="{Binding UserName}"/>
+            <Button Content="Betöltés" Width="125"  Command="{Binding LoadChannelsCommand}"/>
+            <Button Content="Kilépés" Width="125"  Command="{Binding ExitCommand}"/>
+        </StackPanel>
+        <DataGrid Grid.Row="1" AutoGenerateColumns="False" ItemsSource="{Binding StreamingList}" SelectedItem="{Binding SelectedChannel}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Streamer" Binding="{Binding DisplayName}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Játék" Binding="{Binding Game}" IsReadOnly="True"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        <StackPanel Grid.Row="2" Orientation="Horizontal">
+            <Button Content="Livestreamer" Width="125" Command="{Binding RunLivestreamerCommand}"/>
+        </StackPanel>
+    </Grid>
+</Window>
