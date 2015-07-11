@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using Twitcher.Model;
 
 namespace Twitcher.ViewModel
@@ -10,7 +9,9 @@ namespace Twitcher.ViewModel
 
 
         private TwitcherModel _model;
+        private StreamQuality _quality = StreamQuality.Low;
         private ObservableCollection<TwitchChannel> _streamingList;
+        public ObservableCollection<StreamQuality> _qualities = new ObservableCollection<StreamQuality> { StreamQuality.Low, StreamQuality.Medium, StreamQuality.High, StreamQuality.Source };
         private TwitchChannel _selectedChannel;
         private string _userName;
         private bool _loadButtonIsEnabled;
@@ -33,9 +34,34 @@ namespace Twitcher.ViewModel
             }
         }
 
+        public StreamQuality Quality
+        {
+            get
+            {
+                return _quality;
+            }
+            set
+            {
+                if(value != _quality)
+                {
+                    _quality = value;
+                    _model.Quality = _quality;
+                }
+            }
+        }
 
-        
-
+        public ObservableCollection<StreamQuality> Qualities
+        {
+            get
+            {
+                return _qualities;
+            }
+            set
+            {
+                if (value != _qualities)
+                    _qualities = value;
+            }
+        }
 
         public TwitchChannel SelectedChannel
         {
@@ -145,6 +171,7 @@ namespace Twitcher.ViewModel
 
         public DelegateCommand LoadChannelsCommand { get; private set; }
         public DelegateCommand RunLivestreamerCommand { get; private set; }
+        public DelegateCommand ChangeStreamQualityCommand { get; private set; }
         public DelegateCommand ExitCommand { get; set; }
     }
 }

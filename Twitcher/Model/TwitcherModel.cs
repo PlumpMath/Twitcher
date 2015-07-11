@@ -9,11 +9,26 @@ namespace Twitcher.Model
 {
     public class TwitcherModel
     {
+
         private HttpClient _twitchClient;
         private List<TwitchChannel> _followingList;
         private List<TwitchChannel> _streamingList;
         private TwitchFollowsReturnObject _obj;
+        private StreamQuality _quality = StreamQuality.Low;
 
+
+        public StreamQuality Quality
+        {
+            get
+            {
+                return _quality;
+            }
+            set
+            {
+                if (value != _quality)
+                    _quality = value;
+            }
+        }
 
         public List<TwitchChannel> StreamingList
         {
@@ -86,7 +101,7 @@ namespace Twitcher.Model
         {
             Process livestreamer = new Process();
             livestreamer.StartInfo.FileName = "livestreamer";
-            livestreamer.StartInfo.Arguments = " twitch.tv/" + name + " source";
+            livestreamer.StartInfo.Arguments = " twitch.tv/" + name + " " + _quality.ToString();
             livestreamer.StartInfo.CreateNoWindow = true;
             livestreamer.StartInfo.UseShellExecute = false;
             livestreamer.Start();

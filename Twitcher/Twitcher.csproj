@@ -82,6 +82,7 @@
     </Compile>
     <Compile Include="Model\ModelException.cs" />
     <Compile Include="Model\Stream.cs" />
+    <Compile Include="Model\StreamQuality.cs" />
     <Compile Include="Model\TwitchChannel.cs" />
     <Compile Include="Model\TwitcherModel.cs" />
     <Compile Include="Model\TwitchFollowObject.cs" />

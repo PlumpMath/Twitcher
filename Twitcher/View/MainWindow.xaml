@@ -26,6 +26,7 @@
         </DataGrid>
         <StackPanel Grid.Row="2" Orientation="Horizontal">
             <Button Content="Livestreamer" Width="125" Command="{Binding RunLivestreamerCommand}"/>
+            <ComboBox ItemsSource="{Binding Qualities}" SelectedItem="{Binding Quality}"/>
         </StackPanel>
     </Grid>
 </Window>
