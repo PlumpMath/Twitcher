@@ -81,6 +81,7 @@
     <Compile Include="Model\TwitchFollowsReturnObject.cs" />
     <Compile Include="Model\TwitchGame.cs" />
     <Compile Include="Model\TwitchStream.cs" />
+    <Compile Include="Model\YoutubeModel.cs" />
     <Compile Include="ViewModel\DelegateCommand.cs" />
     <Compile Include="ViewModel\TwitcherViewModel.cs" />
     <Compile Include="ViewModel\ViewModelBase.cs" />
