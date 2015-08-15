@@ -3,19 +3,38 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.ComponentModel;
+using System;
+using System.Runtime.CompilerServices;
+using System.Collections.ObjectModel;
 
 namespace Twitcher.Model
 {
-    public class TwitcherModel
+    public class TwitcherModel : INotifyPropertyChanged
     {
-
+        #region Declarations
         private HttpClient _twitchClient;
-        private List<TwitchChannel> _followingList;
-        private List<TwitchChannel> _streamingList;
-        private TwitchFollowsReturnObject _obj;
+        private ObservableCollection<TwitchChannel> _followingList;
+        private ObservableCollection<TwitchChannel> _streamingList;
         private StreamQuality _quality = StreamQuality.Low;
+        private ObservableCollection<StreamQuality> _qualities = new ObservableCollection<StreamQuality> { StreamQuality.Low, StreamQuality.Medium, StreamQuality.High, StreamQuality.Source };
+        private string userName;
+        private TwitchChannel selectedChannel;
+        private bool loadButtonIsEnabled = true;
 
-
+        #region Properties
+        public ObservableCollection<StreamQuality> Qualities
+        {
+            get { return _qualities; }
+            set
+            {
+                if (value != _qualities)
+                {
+                    _qualities = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
         public StreamQuality Quality
         {
             get
@@ -25,11 +44,37 @@ namespace Twitcher.Model
             set
             {
                 if (value != _quality)
+                {
                     _quality = value;
+                    OnPropertyChanged();
+                }
             }
         }
-
-        public List<TwitchChannel> StreamingList
+        public string UserName
+        {
+            get { return userName; }
+            set
+            {
+                if (value != userName)
+                {
+                    userName = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        public TwitchChannel SelectedChannel
+        {
+            get { return selectedChannel; }
+            set
+            {
+                if (value != selectedChannel)
+                {
+                    selectedChannel = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        public ObservableCollection<TwitchChannel> StreamingList
         {
             get
             {
@@ -40,11 +85,23 @@ namespace Twitcher.Model
                 if(_streamingList != value)
                 {
                     _streamingList = value;
+                    OnPropertyChanged();
                 }
             }
         }
-
-        public List<TwitchChannel> FollowingList
+        public bool LoadButtonIsEnabled
+        {
+            get { return loadButtonIsEnabled; }
+            set
+            {
+                if (value != loadButtonIsEnabled)
+                {
+                    loadButtonIsEnabled = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        public ObservableCollection<TwitchChannel> FollowingList
         {
             get
             {
@@ -55,9 +112,11 @@ namespace Twitcher.Model
                 if(_followingList != value)
                 {
                     _followingList = value;
+                    OnPropertyChanged();
                 }
             }
         }
+        #endregion Properties
 
         public TwitcherModel()
         {
@@ -67,16 +126,25 @@ namespace Twitcher.Model
             _twitchClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             _twitchClient.DefaultRequestHeaders.Add("Accept", "application/vnd.twitchtv.v2+json");
         }
+        #endregion Declarations
 
+        public event PropertyChangedEventHandler PropertyChanged;
 
-        public async Task LoadFollowingListForUsername(string username)
+        private void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
-            HttpResponseMessage response = await _twitchClient.GetAsync("users/" + username + "/follows/channels");
+            if (null != PropertyChanged)
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        #region Methods
+        public async Task LoadFollowingListForUsername()
+        {
+            LoadButtonIsEnabled = false;
+            HttpResponseMessage response = await _twitchClient.GetAsync("users/" + userName + "/follows/channels");
             if (response.IsSuccessStatusCode)
             {
-                _obj = await response.Content.ReadAsAsync<TwitchFollowsReturnObject>();
-                _streamingList = new List<TwitchChannel>();
-                foreach(TwitchFollowObject followObject in _obj.Follows)
+                TwitchFollowsReturnObject obj = await response.Content.ReadAsAsync<TwitchFollowsReturnObject>();
+                foreach(TwitchFollowObject followObject in obj.Follows)
                 {
                     response = await _twitchClient.GetAsync("streams/" + followObject.Channel.DisplayName);
                     if (response.IsSuccessStatusCode)
@@ -84,7 +152,7 @@ namespace Twitcher.Model
                         TwitchStream stream = await response.Content.ReadAsAsync<TwitchStream>();
                         if(stream.Stream != null)
                         {
-                            StreamingList.Add(followObject.Channel);
+                            StreamingList = new ObservableCollection<TwitchChannel>(StreamingList ?? new ObservableCollection<TwitchChannel>()) { followObject.Channel };
                         }
                     }
                 }
@@ -94,18 +162,20 @@ namespace Twitcher.Model
             {
                 throw new ModelException();
             }
+            LoadButtonIsEnabled = true;
         }
 
-        public void StartLivestreamerWithChannelName(string name)
+        public void StartLivestreamerWithChannelName()
         {
             Process livestreamer = new Process();
             livestreamer.StartInfo.FileName = "livestreamer";
-            livestreamer.StartInfo.Arguments = " twitch.tv/" + name + " " + _quality.ToString();
+            livestreamer.StartInfo.Arguments = " twitch.tv/" + selectedChannel.DisplayName + " " + _quality.ToString();
             livestreamer.StartInfo.CreateNoWindow = true;
             livestreamer.StartInfo.UseShellExecute = false;
             livestreamer.Start();
             livestreamer.WaitForExit();
         }
+        #endregion Methods
 
     }
 }

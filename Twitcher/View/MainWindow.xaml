@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Twitcher"
+        xmlns:local="clr-namespace:Twitcher.View"
         mc:Ignorable="d"
         Title="Twitcher" Height="360" Width="400" ResizeMode="NoResize">
     <Grid>
@@ -27,6 +27,7 @@
         <StackPanel Grid.Row="2" Orientation="Horizontal">
             <Button Content="Livestreamer" Width="125" Command="{Binding RunLivestreamerCommand}"/>
             <ComboBox ItemsSource="{Binding Qualities}" SelectedItem="{Binding Quality}"/>
+            <Button Content="Youtube" Command="{Binding OpenYoutubeWindowCommand}" />
         </StackPanel>
     </Grid>
 </Window>

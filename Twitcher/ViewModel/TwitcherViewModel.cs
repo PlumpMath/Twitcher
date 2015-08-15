@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
+using System.Reflection;
 using Twitcher.Model;
 
 namespace Twitcher.ViewModel
@@ -9,28 +12,19 @@ namespace Twitcher.ViewModel
 
 
         private TwitcherModel _model;
-        private StreamQuality _quality = StreamQuality.Low;
-        private ObservableCollection<TwitchChannel> _streamingList;
-        public ObservableCollection<StreamQuality> _qualities = new ObservableCollection<StreamQuality> { StreamQuality.Low, StreamQuality.Medium, StreamQuality.High, StreamQuality.Source };
-        private TwitchChannel _selectedChannel;
-        private string _userName;
-        private bool _loadButtonIsEnabled;
 
 
+        #region Properties 
         public bool LoadButtonIsEnabled
         {
             get
             {
-                return _loadButtonIsEnabled;
+                return _model.LoadButtonIsEnabled;
             }
 
             set
             {
-                if(value != _loadButtonIsEnabled)
-                {
-                    _loadButtonIsEnabled = value;
-                    OnPropertyChanged();
-                }
+                OnPropertyChanged();
             }
         }
 
@@ -38,15 +32,13 @@ namespace Twitcher.ViewModel
         {
             get
             {
-                return _quality;
+                return _model.Quality;
             }
             set
             {
-                if(value != _quality)
-                {
-                    _quality = value;
-                    _model.Quality = _quality;
-                }
+                if (value != _model.Quality)
+                    _model.Quality = value;
+                OnPropertyChanged();
             }
         }
 
@@ -54,12 +46,11 @@ namespace Twitcher.ViewModel
         {
             get
             {
-                return _qualities;
+                return _model.Qualities;
             }
             set
             {
-                if (value != _qualities)
-                    _qualities = value;
+                OnPropertyChanged();
             }
         }
 
@@ -67,15 +58,13 @@ namespace Twitcher.ViewModel
         {
             get
             {
-                return _selectedChannel;
+                return _model.SelectedChannel;
             }
             set
             {
-                if(_selectedChannel != value)
-                {
-                    _selectedChannel = value;
-                    OnPropertyChanged();
-                }
+                if (_model.SelectedChannel != value)
+                    _model.SelectedChannel = value;
+                OnPropertyChanged();
             }
         }
 
@@ -83,14 +72,13 @@ namespace Twitcher.ViewModel
         {
             get
             {
-                return _userName;
+                return _model.UserName;
             }
             set
             {
-                if(_userName != value)
-                {
-                    _userName = value;
-                }
+                if (_model.UserName != value)
+                    _model.UserName = value;
+                OnPropertyChanged();
             }
         }
 
@@ -98,31 +86,42 @@ namespace Twitcher.ViewModel
         {
             get
             {
-                return _streamingList;
+                return _model.StreamingList;
             }
             private set
             {
-                if(_streamingList != value)
-                {
-                    _streamingList = value;
-                    OnPropertyChanged();
-                }
+                OnPropertyChanged();
             }
         }
+        #endregion
+
+        private void TwitcherModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            this.GetType()
+                .GetProperties()
+                .FirstOrDefault(item => item.Name == e.PropertyName)
+                .SetValue(this,
+                   sender
+                   .GetType()
+                   .GetProperties()
+                   .FirstOrDefault(item => item.Name == e.PropertyName)
+                   .GetValue(sender));
+        }
+
 
         public TwitcherViewModel(TwitcherModel model)
         {
             _model = model;
-            _streamingList = new ObservableCollection<TwitchChannel>();
-            _loadButtonIsEnabled = true;
 
-            LoadChannelsCommand = new DelegateCommand(async (param) =>
+            _model.PropertyChanged += TwitcherModel_PropertyChanged;
+
+            #region DelegateCommands
+            LoadChannelsCommand = new DelegateCommand(async param =>
             {
                 OnLoadStarted();   
                 try
                 {
-                    await _model.LoadFollowingListForUsername(_userName);
-                    StreamingList = new ObservableCollection<TwitchChannel>(_model.StreamingList);
+                    await _model.LoadFollowingListForUsername();
                 }
                 catch
                 {
@@ -135,7 +134,7 @@ namespace Twitcher.ViewModel
             {
                 try
                 {
-                   _model.StartLivestreamerWithChannelName(SelectedChannel.DisplayName);
+                   _model.StartLivestreamerWithChannelName();
                 }
                 catch
                 {
@@ -147,6 +146,13 @@ namespace Twitcher.ViewModel
             {
                 OnExitCommand();
             });
+
+            OpenYoutubeWindowCommand = new DelegateCommand(param =>
+            {
+                if (YoutubeWindowCommandInvoked != null)
+                    YoutubeWindowCommandInvoked(this, EventArgs.Empty);
+            });
+            #endregion DelegateCommands
         }
 
         private void OnLoadStarted()
@@ -166,6 +172,7 @@ namespace Twitcher.ViewModel
         }
 
         public EventHandler ExitApplication;
+        public EventHandler YoutubeWindowCommandInvoked;
         
 
 
@@ -173,5 +180,6 @@ namespace Twitcher.ViewModel
         public DelegateCommand RunLivestreamerCommand { get; private set; }
         public DelegateCommand ChangeStreamQualityCommand { get; private set; }
         public DelegateCommand ExitCommand { get; set; }
+        public DelegateCommand OpenYoutubeWindowCommand { get; private set; }
     }
 }
