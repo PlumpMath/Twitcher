@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System;
 using System.Runtime.CompilerServices;
 using System.Collections.ObjectModel;
+using System.Linq;        
 
 namespace Twitcher.Model
 {
@@ -140,20 +141,27 @@ namespace Twitcher.Model
         public async Task LoadFollowingListForUsername()
         {
             LoadButtonIsEnabled = false;
-            HttpResponseMessage response = await _twitchClient.GetAsync("users/" + userName + "/follows/channels");
+            StreamingList = StreamingList ?? new ObservableCollection<TwitchChannel>();
+
+            HttpResponseMessage response = await _twitchClient.GetAsync(String.Format("users/{0}/follows/channels", userName));
             if (response.IsSuccessStatusCode)
             {
+                var tasklist = new List<Task<TwitchStream>>();
                 TwitchFollowsReturnObject obj = await response.Content.ReadAsAsync<TwitchFollowsReturnObject>();
-                foreach(TwitchFollowObject followObject in obj.Follows)
+                foreach (TwitchChannel channel in obj.Follows.Select(item => item.Channel).Where(item => !StreamingList.Contains(item)))
                 {
-                    response = await _twitchClient.GetAsync("streams/" + followObject.Channel.DisplayName);
-                    if (response.IsSuccessStatusCode)
+                    tasklist.Add(GetResponseAsync(channel.DisplayName));
+                }
+                try { await Task.WhenAll(tasklist.ToArray()); }
+                catch {}
+
+                foreach (Task<TwitchStream> t in tasklist)
+                {
+                    if (t.IsCompleted)
                     {
-                        TwitchStream stream = await response.Content.ReadAsAsync<TwitchStream>();
-                        if(stream.Stream != null)
-                        {
-                            StreamingList = new ObservableCollection<TwitchChannel>(StreamingList ?? new ObservableCollection<TwitchChannel>()) { followObject.Channel };
-                        }
+                        TwitchStream stream = t.Result;
+                        if (stream.Stream != null)
+                            StreamingList = new ObservableCollection<TwitchChannel>(StreamingList ?? new ObservableCollection<TwitchChannel>()) { stream.Stream.Channel };
                     }
                 }
 
@@ -164,12 +172,18 @@ namespace Twitcher.Model
             }
             LoadButtonIsEnabled = true;
         }
+        
+        public async Task<TwitchStream> GetResponseAsync(string myrequest)
+        {
+            HttpResponseMessage msg = await _twitchClient.GetAsync(String.Format("streams/{0}",myrequest));
+            return msg.IsSuccessStatusCode ? await msg.Content.ReadAsAsync<TwitchStream>() : null;
+        }
 
         public void StartLivestreamerWithChannelName()
         {
             Process livestreamer = new Process();
             livestreamer.StartInfo.FileName = "livestreamer";
-            livestreamer.StartInfo.Arguments = " twitch.tv/" + selectedChannel.DisplayName + " " + _quality.ToString();
+            livestreamer.StartInfo.Arguments = string.Format(" twitch.tv/{0} {1}", selectedChannel.DisplayName, _quality.ToString());
             livestreamer.StartInfo.CreateNoWindow = true;
             livestreamer.StartInfo.UseShellExecute = false;
             livestreamer.Start();
