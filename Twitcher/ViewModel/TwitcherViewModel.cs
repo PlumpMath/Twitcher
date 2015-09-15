@@ -134,7 +134,8 @@ namespace Twitcher.ViewModel
             {
                 try
                 {
-                   _model.StartLivestreamerWithChannelName();
+                    //_model.StartLivestreamerWithChannelName();
+                    _model.Start();
                 }
                 catch
                 {
