@@ -11,12 +11,14 @@ using System.Linq;
 using System.IO;
 using Newtonsoft.Json;
 using System.Data;
+using System.Timers;
 
 namespace Twitcher.Model
 {
     public class TwitcherModel : INotifyPropertyChanged
     {
         #region Declarations
+        private const int REFRESH_INTERVAL = 60000;
         private HttpClient krakenClient;
         private HttpClient apiClient;
         private HttpClient usherClient;
@@ -28,6 +30,7 @@ namespace Twitcher.Model
         private TwitchChannel selectedChannel;
         private bool loadButtonIsEnabled = true;
         private string mediaPlayerFilename;
+        private static Timer timer = new Timer(REFRESH_INTERVAL);
 
         #region Properties
         public ObservableCollection<StreamQuality> Qualities
@@ -141,32 +144,40 @@ namespace Twitcher.Model
         public TwitcherModel()
         {
             krakenClient = new HttpClient();
-            krakenClient.BaseAddress = new Uri( "https://api.twitch.tv/kraken/" );
+            krakenClient.BaseAddress = new Uri("https://api.twitch.tv/kraken/");
             krakenClient.DefaultRequestHeaders.Accept.Clear();
-            krakenClient.DefaultRequestHeaders.Accept.Add( new MediaTypeWithQualityHeaderValue( "application/json" ) );
-            krakenClient.DefaultRequestHeaders.Add( "Accept", "application/vnd.twitchtv.v2+json" );
+            krakenClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            krakenClient.DefaultRequestHeaders.Add("Accept", "application/vnd.twitchtv.v2+json");
+            krakenClient.DefaultRequestHeaders.Add("Keep-Alive", "true");
 
             apiClient = new HttpClient();
-            apiClient.BaseAddress = new Uri( "https://api.twitch.tv/api/" );
+            apiClient.BaseAddress = new Uri("https://api.twitch.tv/api/");
             apiClient.DefaultRequestHeaders.Accept.Clear();
-            apiClient.DefaultRequestHeaders.Accept.Add( new MediaTypeWithQualityHeaderValue( "application/json" ) );
+            apiClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            apiClient.DefaultRequestHeaders.Add("Keep-Alive", "true");
 
             usherClient = new HttpClient();
-            usherClient.BaseAddress = new Uri( "http://usher.twitch.tv/api/" );
+            usherClient.BaseAddress = new Uri("http://usher.twitch.tv/api/");
             usherClient.DefaultRequestHeaders.Accept.Clear();
-
+            usherClient.DefaultRequestHeaders.Add("Keep-Alive", "true");
+            timer.Elapsed += async delegate(object sender, ElapsedEventArgs e)
+            {
+                if (LoadButtonIsEnabled)
+                    await LoadFollowingListForUsername();
+            };
+            timer.Start();
         }
         #endregion Declarations
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private void OnPropertyChanged( [CallerMemberName] string propertyName = null )
+        private void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             if (null != PropertyChanged)
-                PropertyChanged( this, new PropertyChangedEventArgs( propertyName ) );
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        #region Methods    
+        #region Methods
         public async void Start()
         {
             using (Process vlc = new Process())
@@ -184,16 +195,19 @@ namespace Twitcher.Model
             LoadButtonIsEnabled = false;
             StreamingList = StreamingList ?? new ObservableCollection<TwitchChannel>();
 
-            HttpResponseMessage response = await krakenClient.GetAsync( String.Format( "users/{0}/follows/channels", userName ) );
+            HttpResponseMessage response = await krakenClient.GetAsync(String.Format("users/{0}/follows/channels", userName));
             if (response.IsSuccessStatusCode)
             {
                 var tasklist = new List<Task<TwitchStream>>();
                 TwitchFollowsReturnObject obj = await response.Content.ReadAsAsync<TwitchFollowsReturnObject>();
-                foreach (TwitchChannel channel in obj.Follows.Select( item => item.Channel ).Where( item => !StreamingList.Contains( item ) ))
+                foreach (TwitchChannel channel in obj.Follows.Select(item => item.Channel).Where(item => !StreamingList.Contains(item)))
                 {
-                    tasklist.Add( GetResponseAsync( channel.DisplayName ) );
+                    tasklist.Add(GetResponseAsync(channel.DisplayName));
                 }
-                try { await Task.WhenAll( tasklist.ToArray() ); }
+                try 
+                { 
+                    await Task.WhenAll(tasklist.ToArray()); 
+                }
                 catch { }
 
                 foreach (Task<TwitchStream> t in tasklist)
@@ -202,7 +216,7 @@ namespace Twitcher.Model
                     {
                         TwitchStream stream = t.Result;
                         if (stream.Stream != null)
-                            StreamingList = new ObservableCollection<TwitchChannel>( StreamingList ?? new ObservableCollection<TwitchChannel>() ) { stream.Stream.Channel };
+                            StreamingList = new ObservableCollection<TwitchChannel>(StreamingList ?? new ObservableCollection<TwitchChannel>()) { stream.Stream.Channel };
                     }
                 }
 
@@ -214,16 +228,16 @@ namespace Twitcher.Model
             LoadButtonIsEnabled = true;
         }
 
-        public async Task<TwitchStream> GetResponseAsync( string myrequest )
+        public async Task<TwitchStream> GetResponseAsync(string myrequest)
         {
-            HttpResponseMessage msg = await krakenClient.GetAsync( string.Format( "streams/{0}", myrequest ) );
+            HttpResponseMessage msg = await krakenClient.GetAsync(string.Format("streams/{0}", myrequest));
             return msg.IsSuccessStatusCode ? await msg.Content.ReadAsAsync<TwitchStream>() : null;
         }
 
         private async Task<TokenObject> getToken()
         {
 
-            HttpResponseMessage response = await apiClient.GetAsync( string.Format( "channels/{0}/access_token", SelectedChannel.DisplayName ) );
+            HttpResponseMessage response = await apiClient.GetAsync(string.Format("channels/{0}/access_token", SelectedChannel.DisplayName));
             if (response.IsSuccessStatusCode)
                 return await response.Content.ReadAsAsync<TokenObject>();
             else
@@ -238,22 +252,21 @@ namespace Twitcher.Model
                     getUsherApiUri(
                         selectedChannel.DisplayName
                         , param.Token
-                        , param.Sig ) )
+                        , param.Sig))
                 .Result
                 .Content
-                .ReadAsStringAsync() );
+                .ReadAsStringAsync());
         }
 
-        private string getUsherApiUri( string channel, string token, string sig )
+        private string getUsherApiUri(string channel, string token, string sig)
         {
             Random r = new Random();
-            return string.Format( "channel/hls/{0}.m3u8?player=twitchweb&&token={1}&sig={2}&allow_audio_only=true&allow_source=true&type=any&p={3}"
+            return string.Format("channel/hls/{0}.m3u8?player=twitchweb&&token={1}&sig={2}&allow_audio_only=true&allow_source=true&type=any&p={3}"
                 , channel.ToLower()
                 , token
                 , sig
-                , r.Next().ToString() );
+                , r.Next().ToString());
         }
-
         #endregion Methods
 
     }
