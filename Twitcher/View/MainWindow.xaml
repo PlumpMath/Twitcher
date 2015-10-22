@@ -14,7 +14,11 @@
         </Grid.RowDefinitions>
         <StackPanel Name="MenuStackPanel" Grid.Row="0" HorizontalAlignment="Left" Orientation="Horizontal">
             <Label Content="Felhasználónév: " Width="95" Height="{Binding ElementName=MenuStackPanel, Path=ActualHeight}"/>
-            <TextBox Width="95" Height="{Binding ElementName=MenuStackPanel, Path=ActualHeight}" Text="{Binding UserName}"/>
+            <TextBox Name="TextBoxUsernameInput" Width="95" Height="{Binding ElementName=MenuStackPanel, Path=ActualHeight}" Text="{Binding UserName}">
+                <TextBox.InputBindings>
+                    <KeyBinding Key="Return" Command="{Binding TextBox_KeyDown}" CommandParameter="{Binding ElementName=TextBoxUsernameInput}"/>
+                </TextBox.InputBindings>
+            </TextBox>
             <Button Content="Betöltés" Width="95" Height="{Binding ElementName=MenuStackPanel, Path=ActualHeight}"  Command="{Binding LoadChannelsCommand}" IsEnabled="{Binding LoadButtonIsEnabled}"/>
             <Button Content="Kilépés" Width="95" Height="{Binding ElementName=MenuStackPanel, Path=ActualHeight}" Command="{Binding ExitCommand}" />
         </StackPanel>

@@ -3,6 +3,8 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Windows.Controls;
+using System.Windows.Input;
 using Twitcher.Model;
 
 namespace Twitcher.ViewModel
@@ -153,6 +155,12 @@ namespace Twitcher.ViewModel
                 if (YoutubeWindowCommandInvoked != null)
                     YoutubeWindowCommandInvoked(this, EventArgs.Empty);
             });
+
+            TextBox_KeyDown = new DelegateCommand(param => 
+            {
+                ((Control)param).MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
+                LoadChannelsCommand.Execute(param);
+            });
             #endregion DelegateCommands
         }
 
@@ -174,13 +182,13 @@ namespace Twitcher.ViewModel
 
         public EventHandler ExitApplication;
         public EventHandler YoutubeWindowCommandInvoked;
-        
-
-
+ 
         public DelegateCommand LoadChannelsCommand { get; private set; }
         public DelegateCommand RunLivestreamerCommand { get; private set; }
         public DelegateCommand ChangeStreamQualityCommand { get; private set; }
         public DelegateCommand ExitCommand { get; set; }
         public DelegateCommand OpenYoutubeWindowCommand { get; private set; }
+        public DelegateCommand TextBox_KeyDown { get; private set; }
+
     }
 }
